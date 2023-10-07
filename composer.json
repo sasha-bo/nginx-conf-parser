@@ -1,0 +1,18 @@
+{
+    "name": "sasha-bo/nginx-conf-parser",
+    "version": "1.0",
+    "description": "Parsing nginx.conf files with/without following includes",
+    "type": "library",
+    "license": "General Public License",
+    "autoload": {
+        "psr-4": {
+            "SashaBo\\NginxConfParser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Sasha Bo"
+        }
+    ],
+    "require": {}
+}
