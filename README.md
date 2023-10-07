@@ -2,6 +2,10 @@
 
 A PHP library for parsing nginx.conf files.
 
+### Installing
+
+`composer require sasha-bo/nginx-conf-parser`
+
 ### Usage
 
 To parse nginx.conf from string use static method:
@@ -40,17 +44,17 @@ rows with name 'location'.
 The parser doesn't interpret nginx.conf data, just parses. 
 It knows nothing about nginx parameters, just follows the syntax.
 If your nginx.conf file contains wrong data, the parser won't throw 
-exceptions while the structure of file is correct.
+exceptions while the structure of the file is correct.
 
 The only command the parser understands is ***include*** if `$followIncludes`
 is `true`. In this case, parser will parse also included file (or files if
-there is a pattern like *sites-enabled/\*.conf*) and inject the data like
-if the file's content was in place of ***include*** command.
+there is a pattern like *sites-enabled/\*.conf*) and replace the 
+***include*** row with rows from the included file.
 
 ### Composing nginx.conf
 
 The package contains a tool for composing parsed (or generated) data back
-to nginx.conf file. To do this, use
+to nginx.conf file. To do this, use static method
 `SashaBo\NginxConfParser\Composer::compose(array $rows): string`
 
 

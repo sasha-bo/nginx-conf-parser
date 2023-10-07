@@ -3,7 +3,7 @@
     "version": "1.0",
     "description": "Parsing nginx.conf files and following includes",
     "type": "library",
-    "license": "General Public License",
+    "license": "GPL-2.0-only",
     "autoload": {
         "psr-4": {
             "SashaBo\\NginxConfParser\\": "src/"
