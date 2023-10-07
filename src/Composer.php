@@ -11,7 +11,17 @@ class Composer
      * @param array<Row> $rows
      * @return string
      */
-    public static function compose(array $rows, string $tab = ''): string
+    public static function compose(array $rows): string
+    {
+        return static::composeRec($rows);
+    }
+
+    /**
+     * @param array<Row> $rows
+     * @param string $tab
+     * @return string
+     */
+    protected static function composeRec(array $rows, string $tab = ''): string
     {
         $ret = '';
         foreach ($rows as $row) {
@@ -22,7 +32,7 @@ class Composer
             }
             $rows = $row->getRows();
             if (count($rows) > 0) {
-                $ret .= ' {'.static::NEW_LINE.static::compose($rows, $tab.static::TAB).$tab.'}'.static::NEW_LINE;
+                $ret .= ' {'.static::NEW_LINE.static::composeRec($rows, $tab.static::TAB).$tab.'}'.static::NEW_LINE;
             } else {
                 $ret .= ';'.static::NEW_LINE;
             }
