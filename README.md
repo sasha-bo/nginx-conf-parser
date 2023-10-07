@@ -1,6 +1,6 @@
 # nginx-conf-parser
 
-A PHP library for parsing nginx.conf files.
+A PHP library for parsing nginx.conf files. No dependencies.
 
 ### Installing
 
