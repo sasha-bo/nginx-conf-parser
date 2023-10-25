@@ -1,6 +1,6 @@
 <?php
 
-namespace SashaBo\NginxConfParser;
+namespace SashaBo\NginxConfParser\Composers;
 
 class DebugComposer extends Composer
 {

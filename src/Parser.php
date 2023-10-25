@@ -2,34 +2,32 @@
 
 namespace SashaBo\NginxConfParser;
 
+use SashaBo\IterableString\IterableString;
+
 class Parser
 {
     /**
-     * @param SourceInterface $source
-     * @return array<Row>
-     */
-    public static function parse(SourceInterface $source): array
-    {
-        $reader = new Reader($source);
-        return static::getBlock($reader);
-    }
-
-    /**
      * @param string $source
      * @return array<Row>
      */
-    public static function parseString(string $source): array
+    public static function parse(string $source): array
     {
-        return static::parse(new StringSource($source));
+        return static::getBlock(new IterableString($source));
     }
 
     /**
-     * @param string $source
+     * @param string $path
+     * @param bool $followIncludes
      * @return array<Row>
+     * @throws \Exception
      */
     public static function parseFile(string $path, bool $followIncludes = false): array
     {
-        $rows = static::parse(new FileSource($path));
+        $string = file_get_contents($path);
+        if ($string === false) {
+            throw new \Exception('Can\'t read '.$path);
+        }
+        $rows = static::parse($string);
         return $followIncludes ? self::followIncludes($rows, $path) : $rows;
     }
 
@@ -39,57 +37,58 @@ class Parser
 
     /**
      * @return array<Row>
+     * @throws \Exception
      */
-    private static function getBlock(Reader $reader): array
+    private static function getBlock(IterableString $source): array
     {
         $ret = [];
-        self::skipSpaces($reader);
-        while (!$reader->finished()) {
-            if ($reader->getCurrentChar() == '}') {
-                $reader->move();
+        self::skipSpaces($source);
+        while ($source->valid()) {
+            if ($source->current() == '}') {
+                $source->next();
                 break;
             }
-            $ret[] = self::getRow($reader);
-            self::skipSpaces($reader);
+            $ret[] = self::getRow($source);
+            self::skipSpaces($source);
         }
 
         return $ret;
     }
 
-    private static function getRow(Reader $reader): Row
+    private static function getRow(IterableString $source): Row
     {
-        $name = self::getWord($reader);
-        self::skipSpaces($reader);
+        $name = self::getWord($source);
+        self::skipSpaces($source);
         $value = [];
-        while (!$reader->finished() && !in_array($reader->getCurrentChar(), ['{', ';'])) {
-            $value[] = self::getWord($reader);
-            self::skipSpaces($reader);
+        while ($source->valid() && !in_array($source->current(), ['{', ';'])) {
+            $value[] = self::getWord($source);
+            self::skipSpaces($source);
         }
-        if ($reader->getCurrentChar() == '{') {
-            $reader->move();
-            $rows = self::getBlock($reader);
-        } elseif ($reader->getCurrentChar() != ';') {
-            throw new \Exception('Expected ; on '.$reader->getLineNumber().'.'.$reader->getLinePosition());
+        if ($source->current() == '{') {
+            $source->next();
+            $rows = self::getBlock($source);
+        } elseif ($source->current() != ';') {
+            throw new \Exception('Expected ; on '.$source->key());
         } else {
             $rows = [];
         }
-        $reader->move();
+        $source->next();
         return new Row($name, $value, $rows);
     }
 
-    private static function getWord(Reader $reader): string
+    private static function getWord(IterableString $source): string
     {
         $value = '';
-        if (in_array($reader->getCurrentChar(), ['\'', '"'], true)) {
-            $quote = $reader->getCurrentChar();
-            $reader->move();
-            return self::getTillQuote($reader, $quote);
+        if (in_array($source->current(), ['\'', '"'], true)) {
+            $quote = $source->current();
+            $source->next();
+            return self::getTillQuote($source, $quote);
         }
-        while (!$reader->finished()) {
-            $char = $reader->getCurrentChar();
+        while ($source->valid()) {
+            $char = $source->current();
             if (preg_match('/^[^\s;\{]+$/i', $char)) {
                 $value .= $char;
-                $reader->move();
+                $source->next();
             } else {
                 break;
             }
@@ -98,42 +97,43 @@ class Parser
         return $value;
     }
 
-    private static function getTillQuote(Reader $reader, string $quote = '\''): string
+    private static function getTillQuote(IterableString $source, string $quote = '\''): string
     {
         $value = '';
-        while (!$reader->finished()) {
-            $char = $reader->getCurrentChar();
+        while ($source->valid()) {
+            $char = $source->current();
             if ($char == '\\') {
-                if (!$reader->isLast() && in_array($reader->getNextChar(), [$quote, '\\'], true)) {
-                    $value .= $reader->getNextChar();
-                    $reader->move();
-                    $reader->move();
+                if (!$source->isLast() && in_array($source->current(2), ['\\'.$quote, '\\\\'], true)) {
+                    $source->next();
+                    $value .= $source->current();
+                    $source->next();
                 } else {
                     $value .= '\\';
-                    $reader->move();
+                    $source->next();
                 }
             } elseif ($char == $quote) {
-                $reader->move();
+                $source->next();
                 break;
             } else {
                 $value .= $char;
-                $reader->move();
+                $source->next();
             }
         }
 
         return $value;
     }
 
-    public static function skipSpaces(Reader $reader): void
+    public static function skipSpaces(IterableString $source): void
     {
-        while (!$reader->finished() && trim($reader->getCurrentChar()) == '') {
-            $reader->move();
+        while ($source->valid() && trim($source->current()) == '') {
+            $source->next();
         }
     }
 
     /**
      * @param array<Row> $rows
      * @return array<Row>
+     * @throws \Exception
      */
     public static function followIncludes(array $rows, string $parentFile): array
     {

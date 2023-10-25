@@ -1,6 +1,8 @@
 <?php
 
-namespace SashaBo\NginxConfParser;
+namespace SashaBo\NginxConfParser\Composers;
+
+use SashaBo\NginxConfParser\Row;
 
 class Composer
 {

@@ -36,7 +36,7 @@ class PatternFileFinder
         $fileEndLength = strlen($fileEnd);
         $dp = opendir($directory);
         if ($dp === false) {
-            throw new CantOpenFileException('Can\'t open directory '.$directory);
+            throw new \Exception('Can\'t open directory '.$directory);
         }
         $ret = [];
         while (($fileName = readdir($dp)) !== false) {

@@ -1,5 +1,5 @@
 {
-    "name": "sasha-bo/nginx-conf-parser",
+    "name": "sashabo/nginx-conf-parser",
     "version": "1.0",
     "description": "Parsing nginx.conf files and following includes",
     "type": "library",
@@ -15,6 +15,7 @@
         }
     ],
     "require": {
-        "php": ">=7.4"
+        "php": ">=7.4",
+        "sashabo/iterable-string": ">=1.0"
     }
 }
