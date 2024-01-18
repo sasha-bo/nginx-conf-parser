@@ -27,9 +27,13 @@ class Row
     /** @var array<self> */
     public readonly array $rows;
     public readonly ?string $file;
+    /** @var non-negative-int */
     public readonly int $position;
+    /** @var non-negative-int */
     public readonly int $line;
+    /** @var non-negative-int */
     public readonly int $linePosition;
+    /** @var positive-int */
     public readonly int $length;
 }
 ```
