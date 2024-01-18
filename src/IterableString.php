@@ -2,41 +2,66 @@
 
 namespace SashaBo\NginxConfParser;
 
-/** @implements \Iterator<int, string> */
+use Iterator;
+
+/**
+ * @implements Iterator<non-negative-int, string>
+ *
+ * @internal
+ */
 class IterableString implements \Iterator
 {
-    protected int $length;
-    protected int $position = 0;
-    protected ?string $current = null;
+    private int $length;
+
+    /** @var non-negative-int */
+    private int $position = 0;
+
+    /** @var non-negative-int */
+    private int $line = 0;
+
+    /** @var non-negative-int */
+    private int $linePosition = 0;
+    private ?string $current = null;
 
     public function __construct(
-        protected readonly string $source
+        private readonly string $source
     ) {
-        $this->setLength();
-    }
-
-    protected function setLength(): void
-    {
         $this->length = strlen($this->source);
+        $this->read();
     }
 
     public function rewind(): void
     {
         $this->position = 0;
-        $this->current = null;
+        $this->line = 0;
+        $this->linePosition = 0;
+        $this->read();
     }
 
     public function current(): string
     {
-        return $this->current ?? $this->current = substr($this->source, $this->position, 1);
+        return (string) $this->current;
     }
 
-    public function next(int $steps = 1): void
+    private function read(): void
     {
-        $this->position += $steps;
-        $this->current = null;
+        $this->current = substr($this->source, $this->position, 1);
     }
 
+    public function next(): void
+    {
+        $newLine = "\n" == $this->current;
+        ++$this->position;
+        if ($newLine) {
+            ++$this->line;
+            $this->linePosition = 0;
+        } else {
+            ++$this->linePosition;
+        }
+        $this->read();
+    }
+
+    /** @return non-negative-int */
     public function key(): int
     {
         return $this->position;
@@ -44,11 +69,23 @@ class IterableString implements \Iterator
 
     public function valid(): bool
     {
-        return $this->position >= 0 && $this->position < $this->length;
+        return $this->position < $this->length;
     }
 
     public function isLast(): bool
     {
         return $this->position == $this->length - 1;
+    }
+
+    /** @return non-negative-int */
+    public function line(): int
+    {
+        return $this->line;
+    }
+
+    /** @return non-negative-int */
+    public function linePosition(): int
+    {
+        return $this->linePosition;
     }
 }

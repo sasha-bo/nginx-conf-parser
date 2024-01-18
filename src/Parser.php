@@ -11,7 +11,7 @@ class Parser
      */
     public static function parseString(string $source): array
     {
-        return self::getBlock(new IterableString($source));
+        return self::getBlock(new IterableString($source), null);
     }
 
     /**
@@ -25,7 +25,7 @@ class Parser
         if (false === $string) {
             throw new \Exception('Can\'t read ' . $path);
         }
-        $rows = static::parseString($string);
+        $rows = self::getBlock(new IterableString($string), $path);
 
         return $followIncludes ? self::followIncludes($rows, $path) : $rows;
     }
@@ -37,7 +37,7 @@ class Parser
      *
      * @throws \Exception
      */
-    private static function getBlock(IterableString $source): array
+    private static function getBlock(IterableString $source, ?string $file): array
     {
         $ret = [];
         self::skipSpacesAndComments($source);
@@ -47,15 +47,18 @@ class Parser
 
                 break;
             }
-            $ret[] = self::getRow($source);
+            $ret[] = self::getRow($source, $file);
             self::skipSpacesAndComments($source);
         }
 
         return $ret;
     }
 
-    private static function getRow(IterableString $source): Row
+    private static function getRow(IterableString $source, ?string $file): Row
     {
+        $startPosition = $source->key();
+        $startLine = $source->line();
+        $startLinePosition = $source->linePosition();
         $name = self::getWord($source);
         self::skipSpacesAndComments($source);
         $value = [];
@@ -66,13 +69,26 @@ class Parser
         $rows = [];
         if ('{' == $source->current()) {
             $source->next();
-            $rows = self::getBlock($source);
-        } elseif (';' != $source->current()) {
-            throw new \Exception('Expected ; on ' . $source->key());
+            $rows = self::getBlock($source, $file);
+        } elseif (';' == $source->current()) {
+            $source->next();
+        } else {
+            throw new \Exception('Missed ; on ' . $file . '[' . ($source->line() + 1) . ':' . ($source->linePosition() + 1) . ']');
         }
-        $source->next();
 
-        return new Row($name, $value, $rows);
+        /** @var positive-int $length */
+        $length = $source->key() - $startPosition;
+
+        return new Row(
+            $name,
+            $value,
+            $rows,
+            $file,
+            $startPosition,
+            $startLine,
+            $startLinePosition,
+            $length
+        );
     }
 
     private static function getWord(IterableString $source): string
@@ -164,11 +180,20 @@ class Parser
     {
         $rowsWithIncludes = [];
         foreach ($rows as $row) {
-            if (count($row->getRows()) > 0) {
-                $row = new Row($row->getName(), $row->getValue(), self::followIncludes($row->getRows(), $parentFile));
+            if (count($row->rows) > 0) {
+                $row = new Row(
+                    $row->name,
+                    $row->values,
+                    self::followIncludes($row->rows, $parentFile),
+                    $row->file,
+                    $row->position,
+                    $row->line,
+                    $row->linePosition,
+                    $row->length
+                );
             }
-            if ('include' == $row->getName()) {
-                foreach ($row->getValue() as $pattern) {
+            if ('include' == $row->name) {
+                foreach ($row->values as $pattern) {
                     foreach (PatternFileFinder::find($pattern, $parentFile) as $includeFile) {
                         foreach (self::parseFile($includeFile, true) as $includeRow) {
                             $rowsWithIncludes[] = $includeRow;

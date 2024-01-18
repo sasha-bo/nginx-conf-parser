@@ -24,17 +24,23 @@ class Composer
     {
         $ret = '';
         foreach ($rows as $row) {
-            $ret .= $tab . static::composeName($row->getName());
-            $values = static::composeValues($row);
-            if ('' != $values) {
-                $ret .= ' ' . $values;
-            }
-            $rows = $row->getRows();
-            if (count($rows) > 0) {
-                $ret .= ' {' . static::NEW_LINE . static::composeRec($rows, $tab . static::TAB) . $tab . '}' . static::NEW_LINE;
-            } else {
-                $ret .= ';' . static::NEW_LINE;
-            }
+            $ret .= static::composeRowRec($row, $tab);
+        }
+
+        return $ret;
+    }
+
+    protected static function composeRowRec(Row $row, string $tab = ''): string
+    {
+        $ret = $tab . static::composeName($row->name);
+        $values = static::composeValues($row);
+        if ('' != $values) {
+            $ret .= ' ' . $values;
+        }
+        if (count($row->rows) > 0) {
+            $ret .= ' {' . static::NEW_LINE . static::composeRec($row->rows, $tab . static::TAB) . $tab . '}' . static::NEW_LINE;
+        } else {
+            $ret .= ';' . static::NEW_LINE;
         }
 
         return $ret;
@@ -48,7 +54,7 @@ class Composer
     protected static function composeValues(Row $row): string
     {
         $values = [];
-        foreach ($row->getValue() as $value) {
+        foreach ($row->values as $value) {
             $values[] = static::composeValue($value);
         }
 

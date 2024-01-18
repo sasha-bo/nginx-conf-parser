@@ -2,6 +2,7 @@
 
 namespace SashaBo\NginxConfParser;
 
+/** @internal */
 class PatternFileFinder
 {
     /**
@@ -10,12 +11,12 @@ class PatternFileFinder
      */
     public static function find(string $pattern, string $parentFile): array
     {
-        if ('/' != substr($pattern, 0, 1)) {
+        if (!str_starts_with($pattern, '/')) {
             [$rootDir] = self::getDirAndFile($parentFile);
             $pattern = $rootDir . '/' . $pattern;
         }
         [$directory, $filePattern] = self::getDirAndFile($pattern);
-        if ('*' == substr($filePattern, 0, 1)) {
+        if (str_starts_with($filePattern, '*')) {
             $fileEnd = substr($filePattern, 1);
 
             return self::scan($directory, $fileEnd);
