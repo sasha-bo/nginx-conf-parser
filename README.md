@@ -2,9 +2,9 @@
 
 A PHP library for parsing nginx.conf files. No dependencies.
 
-### Installing
+### Installation
 
-`composer require sasha-bo/nginx-conf-parser`
+`composer require sashabo/nginx-conf-parser`
 
 ### Usage
 

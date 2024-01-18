@@ -11,7 +11,6 @@ class Composer
 
     /**
      * @param array<Row> $rows
-     * @return string
      */
     public static function compose(array $rows): string
     {
@@ -20,23 +19,21 @@ class Composer
 
     /**
      * @param array<Row> $rows
-     * @param string $tab
-     * @return string
      */
     protected static function composeRec(array $rows, string $tab = ''): string
     {
         $ret = '';
         foreach ($rows as $row) {
-            $ret .= $tab.static::composeName($row->getName());
+            $ret .= $tab . static::composeName($row->getName());
             $values = static::composeValues($row);
-            if ($values != '') {
-                $ret .= ' '.$values;
+            if ('' != $values) {
+                $ret .= ' ' . $values;
             }
             $rows = $row->getRows();
             if (count($rows) > 0) {
-                $ret .= ' {'.static::NEW_LINE.static::composeRec($rows, $tab.static::TAB).$tab.'}'.static::NEW_LINE;
+                $ret .= ' {' . static::NEW_LINE . static::composeRec($rows, $tab . static::TAB) . $tab . '}' . static::NEW_LINE;
             } else {
-                $ret .= ';'.static::NEW_LINE;
+                $ret .= ';' . static::NEW_LINE;
             }
         }
 
@@ -54,6 +51,7 @@ class Composer
         foreach ($row->getValue() as $value) {
             $values[] = static::composeValue($value);
         }
+
         return implode(' ', $values);
     }
 
@@ -64,6 +62,6 @@ class Composer
 
     protected static function addQuotes(string $value): string
     {
-        return '\''.str_replace(['\\', '\''], ['\\\\', '\\\''], $value).'\'';
+        return '\'' . str_replace(['\\', '\''], ['\\\\', '\\\''], $value) . '\'';
     }
 }
