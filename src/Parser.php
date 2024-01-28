@@ -62,7 +62,7 @@ class Parser
         $name = self::getWord($source);
         self::skipSpacesAndComments($source);
         $value = [];
-        while ($source->valid() && !in_array($source->current(), ['{', ';'])) {
+        while ($source->valid() && !in_array($source->current(), ['{', ';', '}'], true)) {
             $value[] = self::getWord($source);
             self::skipSpacesAndComments($source);
         }
