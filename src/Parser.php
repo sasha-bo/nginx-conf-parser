@@ -145,7 +145,7 @@ class Parser
         return $value;
     }
 
-    public static function skipSpacesAndComments(IterableString $source): void
+    private static function skipSpacesAndComments(IterableString $source): void
     {
         self::skipSpaces($source);
         if ('#' == $source->current()) {
@@ -154,14 +154,14 @@ class Parser
         }
     }
 
-    public static function skipSpaces(IterableString $source): void
+    private static function skipSpaces(IterableString $source): void
     {
         while ($source->valid() && '' == trim($source->current())) {
             $source->next();
         }
     }
 
-    public static function skipTillEndOfLine(IterableString $source): void
+    private static function skipTillEndOfLine(IterableString $source): void
     {
         do {
             $source->next();
@@ -176,7 +176,7 @@ class Parser
      *
      * @throws \Exception
      */
-    public static function followIncludes(array $rows, string $parentFile): array
+    private static function followIncludes(array $rows, string $parentFile): array
     {
         $rowsWithIncludes = [];
         foreach ($rows as $row) {
