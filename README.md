@@ -79,5 +79,88 @@ The package contains a tool for composing parsed (or generated) data back
 to nginx.conf file. To do this, use static method
 `SashaBo\NginxConfParser\Composer::compose(array $rows): string`
 
+## Searching parameters in nginx.conf
 
+Since 1.2.0 the package contains Finder class with these methods:
 
+```php
+class Finder
+{
+    /**
+     * @param array<Row> $rows
+     * @return array<Row>
+     */
+    public static function findByName(array $rows, string $name): array
+
+    /**
+     * @param array<Row> $rows
+     * @return ?Row
+     */
+    public static function findOneByName(array $rows, string $name): ?Row
+
+    /**
+     * @param array<Row>    $rows
+     * @param array<string> $path
+     * @return array<Row>
+     */
+    public static function findByPath(array $rows, array $path): array
+
+    /**
+     * @param array<Row>    $rows
+     * @param array<string> $path
+     * @return ?Row
+     */
+    public static function findOneByPath(array $rows, array $path): ?Row
+}
+```
+
+## Using variables
+
+Since 1.2.0 the package contains VariableReplacer class with these methods:
+
+```php
+class VariableReplacer
+{
+    public const MISSED_SET_EMPTY = 'set-empty';
+    public const MISSED_IGNORE = 'ignore';
+    public const MISSED_THROW_EXCEPTION = 'exception';
+
+    /**
+     * @param array<Row>            $rows
+     * @param array<string, string> $variables
+     * @return array<Row>
+     */
+    public static function replace(array $rows, array $variables, string $missedMode = self::MISSED_IGNORE): array
+
+    public static function replaceRow(Row $row, array $variables, string $missedMode = self::MISSED_IGNORE): Row
+}
+```
+
+Example:
+
+```
+server {
+    listen $server_port;
+    root $server_root;
+
+    location / {
+        try_files $uri @php;
+    }
+    location @php {
+        include fastcgi.conf;
+        fastcgi_pass localhost:9000;
+        fastcgi_param SCRIPT_FILENAME /app/app.php;
+    }
+}
+```
+
+```php
+$rows = VariableReplacer::replace(
+    Parser::parseFile('/etc/nginx/nginx.conf'),
+    [
+        'server_port' => 80,
+        'server_root' => '/app/public'
+    ]
+);
+
+```
