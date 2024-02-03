@@ -48,7 +48,7 @@ class Composer
 
     protected static function composeName(string $name): string
     {
-        return $name;
+        return self::quoteIfNecessary($name);
     }
 
     protected static function composeValues(Row $row): string
@@ -63,7 +63,12 @@ class Composer
 
     protected static function composeValue(string $value): string
     {
-        return preg_match('/[\s\'"]/', $value) ? static::addQuotes($value) : $value;
+        return self::quoteIfNecessary($value);
+    }
+
+    protected static function quoteIfNecessary(string $value): string
+    {
+        return '' == $value || preg_match('/[\s\'"]/', $value) ? static::addQuotes($value) : $value;
     }
 
     protected static function addQuotes(string $value): string
